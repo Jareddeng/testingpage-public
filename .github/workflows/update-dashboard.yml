@@ -1,0 +1,63 @@
+name: Update AI Dashboard
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 每天 UTC 06:00 (北京时间 14:00)
+    - cron: '0 22 * * *'  # 每天 UTC 22:00 (北京时间 06:00 次日)
+  workflow_dispatch:       # 支持手动触发
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Fetch data & build dashboard
+        run: |
+          python scripts/build_dashboard.py
+        env:
+          # 如需接入真实API，在此配置密钥
+          # TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
+          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          BUILD_TIME: ${{ github.event.schedule || 'manual' }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./output
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

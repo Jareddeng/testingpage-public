@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Industry Intelligence Dashboard | 2026-06-18 13:43:49</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', 'Noto Sans SC', sans-serif; }
+        body { background: #0a0e1a; color: #e2e8f0; }
+        .glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.1);
+        }
+        .glass:hover {
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.1);
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5), 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+        .neon-border {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2), inset 0 0 15px rgba(56, 189, 248, 0.05);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .ticker-wrap { overflow: hidden; white-space: nowrap; }
+        .ticker { display: inline-block; animation: ticker 30s linear infinite; }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .pulse-dot { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .chart-container { min-height: 320px; }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); }
+        .tag {
+            display: inline-flex; align-items: center;
+            padding: 2px 10px; border-radius: 9999px;
+            font-size: 0.75rem; font-weight: 500;
+        }
+        .tag-blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .tag-purple { background: rgba(192, 132, 252, 0.15); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
+        .tag-green { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+        .tag-orange { background: rgba(251, 146, 60, 0.15); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.3); }
+        .tag-red { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+        .report-card {
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .report-card:hover {
+            border-left-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.05);
+        }
+        .progress-bar {
+            height: 6px; border-radius: 3px;
+            background: rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; border-radius: 3px;
+            transition: width 1s ease;
+        }
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .number-counter { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="grid-bg min-h-screen">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-slate-800/50">
+        <div class="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold gradient-text tracking-tight">AI Industry Intelligence</h1>
+                    <p class="text-xs text-slate-400">全球人工智能产业深度监测看板</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="hidden md:flex items-center gap-2 text-sm text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+                    <span>实时数据流</span>
+                </div>
+                <div class="text-right">
+                    <div id="clock" class="text-lg font-mono font-semibold text-sky-400">--:--:--</div>
+                    <div id="date" class="text-xs text-slate-500">----/--/--</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- News Ticker -->
+    <div class="mt-16 bg-slate-900/50 border-y border-slate-800/50">
+        <div class="ticker-wrap py-2">
+            <div class="ticker text-sm text-slate-300">
+                
+                <span class="mx-8">中信证券：AI商业化加速科技行情震荡分化</span>
+                
+                <span class="mx-8">Gartner：2026年十大战略技术趋势：从模型崇拜到经济实用</span>
+                
+                <span class="mx-8">中投顾问：智能机器人：从技术验证迈向商业化落地</span>
+                
+                <span class="mx-8">中研普华：AI服务器行业全景：异构计算与液冷技术双重革命</span>
+                
+                <span class="mx-8">斯坦福HAI：2026年人工智能指数报告：私人投资翻倍增长</span>
+                
+                
+                <span class="mx-8">中信证券：AI商业化加速科技行情震荡分化</span>
+                
+                <span class="mx-8">Gartner：2026年十大战略技术趋势：从模型崇拜到经济实用</span>
+                
+                <span class="mx-8">中投顾问：智能机器人：从技术验证迈向商业化落地</span>
+                
+                <span class="mx-8">中研普华：AI服务器行业全景：异构计算与液冷技术双重革命</span>
+                
+                <span class="mx-8">斯坦福HAI：2026年人工智能指数报告：私人投资翻倍增长</span>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
+
+        <!-- Top Stats Row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            
+            
+            <div class="glass rounded-xl p-5 stat-card neon-border">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-400 text-sm">CAGR</span>
+                    <span class="tag tag-blue">+39.7%</span>
+                </div>
+                <div class="text-2xl font-bold text-white number-counter">1839<span class="text-lg text-slate-400">亿美元</span></div>
+                <div class="text-xs text-slate-500 mt-1">综合研报数据 (模拟+真实框架)</div>
+                <div class="progress-bar mt-3">
+                    <div class="progress-fill bg-gradient-to-r from-sky-500 to-indigo-500" style="width: 35%"></div>
+                </div>
+            </div>
+            
+            <div class="glass rounded-xl p-5 stat-card neon-border">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-400 text-sm">YoY</span>
+                    <span class="tag tag-blue">+41.0%</span>
+                </div>
+                <div class="text-2xl font-bold text-white number-counter">12534<span class="text-lg text-slate-400">亿元</span></div>
+                <div class="text-xs text-slate-500 mt-1">综合研报数据 (模拟+真实框架)</div>
+                <div class="progress-bar mt-3">
+                    <div class="progress-fill bg-gradient-to-r from-purple-500 to-pink-500" style="width: 62%"></div>
+                </div>
+            </div>
+            
+            <div class="glass rounded-xl p-5 stat-card neon-border">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-400 text-sm">美国私人投资</span>
+                    <span class="tag tag-blue">+127.5%</span>
+                </div>
+                <div class="text-2xl font-bold text-white number-counter">2859<span class="text-lg text-slate-400">亿美元</span></div>
+                <div class="text-xs text-slate-500 mt-1">综合研报数据 (模拟+真实框架)</div>
+                <div class="progress-bar mt-3">
+                    <div class="progress-fill bg-gradient-to-r from-emerald-500 to-teal-500" style="width: 78%"></div>
+                </div>
+            </div>
+            
+            <div class="glass rounded-xl p-5 stat-card neon-border">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-400 text-sm">中国大模型数量</span>
+                    <span class="tag tag-blue">全球第一</span>
+                </div>
+                <div class="text-2xl font-bold text-white number-counter">1509<span class="text-lg text-slate-400">个</span></div>
+                <div class="text-xs text-slate-500 mt-1">综合研报数据 (模拟+真实框架)</div>
+                <div class="progress-bar mt-3">
+                    <div class="progress-fill bg-gradient-to-r from-orange-500 to-amber-500" style="width: 45%"></div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Research Reports + Facts -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Daily Research Insights -->
+            <div class="lg:col-span-2 glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <h2 class="text-lg font-semibold text-white">每日深度研报观点</h2>
+                        <span class="tag tag-blue">2026-06-18</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="filterReports('all')" class="px-3 py-1 text-xs rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 hover:bg-sky-500/30 transition">全部</button>
+                        <button onclick="filterReports('strategy')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 transition">策略</button>
+                        <button onclick="filterReports('tech')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 transition">技术</button>
+                    </div>
+                </div>
+                <div class="space-y-3 max-h-[480px] overflow-y-auto scroll-hide pr-1" id="reports-container">
+                    
+                    <div class="report-card glass rounded-lg p-4" data-category="strategy">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-red-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-red-400 font-bold text-xs">中信</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-medium text-white text-sm">AI商业化加速科技行情震荡分化</h3>
+                                    <span class="tag tag-red">策略</span>
+                                </div>
+                                <p class="text-xs text-slate-400 leading-relaxed mb-2">站在当前时点，AI产业进展处于早期阶段，AI带来的机遇大于挑战。视频生成模型、世界模型与物理AI等新方向层出不穷。预计模型迭代周期将持续缩短，以Anthropic为代表的模型公司ARR持续提升。</p>
+                                <div class="flex items-center gap-4 text-xs text-slate-500">
+                                    <span>来源: 中信证券</span>
+                                    <span>2026-06-02</span>
+                                    <span class="text-sky-400">置信度: 92%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card glass rounded-lg p-4" data-category="tech">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-purple-400 font-bold text-xs">Gartner</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-medium text-white text-sm">2026年十大战略技术趋势：从模型崇拜到经济实用</h3>
+                                    <span class="tag tag-purple">技术</span>
+                                </div>
+                                <p class="text-xs text-slate-400 leading-relaxed mb-2">2026年AI技术趋势将从模型崇拜转向经济实用。特定领域语言模型（DSLM）凭借更高准确性、更低成本和更好合规性填补空白。预测到2028年，企业使用的生成式AI模型中将有超过半数属于特定领域模型。</p>
+                                <div class="flex items-center gap-4 text-xs text-slate-500">
+                                    <span>来源: Gartner</span>
+                                    <span>2026-01-14</span>
+                                    <span class="text-sky-400">置信度: 95%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card glass rounded-lg p-4" data-category="strategy">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500/20 to-green-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-green-400 font-bold text-xs">中投</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-medium text-white text-sm">智能机器人：从技术验证迈向商业化落地</h3>
+                                    <span class="tag tag-green">产业</span>
+                                </div>
+                                <p class="text-xs text-slate-400 leading-relaxed mb-2">2026年标志着全球智能机器人产业从技术验证正式迈向商业化落地的历史性转折。预计2026年全球人形机器人出货量将突破5万台，中国市场占比提升至30%。</p>
+                                <div class="flex items-center gap-4 text-xs text-slate-500">
+                                    <span>来源: 中投顾问</span>
+                                    <span>2026-05-07</span>
+                                    <span class="text-sky-400">置信度: 88%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card glass rounded-lg p-4" data-category="tech">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-400 font-bold text-xs">中研</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-medium text-white text-sm">AI服务器行业全景：异构计算与液冷技术双重革命</h3>
+                                    <span class="tag tag-blue">技术</span>
+                                </div>
+                                <p class="text-xs text-slate-400 leading-relaxed mb-2">AI服务器正从单一GPU架构向CPU+GPU+NPU+ASIC多元异构体系演进。液冷技术从可选配置升级为必选项，浸没式液冷使数据中心PUE值逼近理论极限。</p>
+                                <div class="flex items-center gap-4 text-xs text-slate-500">
+                                    <span>来源: 中研普华</span>
+                                    <span>2026-04-09</span>
+                                    <span class="text-sky-400">置信度: 90%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card glass rounded-lg p-4" data-category="strategy">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-amber-400 font-bold text-xs">斯坦福</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-medium text-white text-sm">2026年人工智能指数报告：私人投资翻倍增长</h3>
+                                    <span class="tag tag-amber">数据</span>
+                                </div>
+                                <p class="text-xs text-slate-400 leading-relaxed mb-2">2025年全球企业AI投资规模实现翻倍，私人领域AI投资同比增长127.5%，其中生成式AI相关投资增幅超200%。美国私人领域AI投资规模达2859亿美元，是中国的23倍。</p>
+                                <div class="flex items-center gap-4 text-xs text-slate-500">
+                                    <span>来源: 斯坦福HAI</span>
+                                    <span>2026-04-15</span>
+                                    <span class="text-sky-400">置信度: 96%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Quick Facts Panel -->
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center gap-2 mb-5">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <h2 class="text-lg font-semibold text-white">实时事实数据</h2>
+                </div>
+                <div class="space-y-4">
+                    <div class="glass rounded-lg p-3">
+                        <div class="text-xs text-slate-400 mb-1">AI行业渗透率 (中国)</div>
+                        <div class="space-y-2">
+                            
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-300">互联网</span>
+                                <span class="font-semibold" style="color: #10b981">89%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 89%; background-color: #10b981"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-300">电信</span>
+                                <span class="font-semibold" style="color: #38bdf8">68%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 68%; background-color: #38bdf8"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-300">政务</span>
+                                <span class="font-semibold" style="color: #a855f7">65%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%; background-color: #a855f7"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-300">金融</span>
+                                <span class="font-semibold" style="color: #f59e0b">64%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 64%; background-color: #f59e0b"></div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="glass rounded-lg p-3">
+                        <div class="text-xs text-slate-400 mb-2">细分赛道增速 (2026)</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            
+                            <div class="text-center p-2 rounded-lg bg-slate-800/50">
+                                <div class="text-lg font-bold" style="color: #38bdf8">+45%</div>
+                                <div class="text-xs text-slate-500">AI服务器</div>
+                            </div>
+                            
+                            <div class="text-center p-2 rounded-lg bg-slate-800/50">
+                                <div class="text-lg font-bold" style="color: #a855f7">+38%</div>
+                                <div class="text-xs text-slate-500">AI眼镜</div>
+                            </div>
+                            
+                            <div class="text-center p-2 rounded-lg bg-slate-800/50">
+                                <div class="text-lg font-bold" style="color: #10b981">+52%</div>
+                                <div class="text-xs text-slate-500">人形机器人</div>
+                            </div>
+                            
+                            <div class="text-center p-2 rounded-lg bg-slate-800/50">
+                                <div class="text-lg font-bold" style="color: #f59e0b">+23%</div>
+                                <div class="text-xs text-slate-500">可穿戴AI</div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="glass rounded-lg p-3">
+                        <div class="text-xs text-slate-400 mb-2">投资地域分布</div>
+                        <div class="space-y-2">
+                            
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 text-xs text-slate-300">北京</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-fill" style="width: 42%; background-color: #ef4444"></div>
+                                </div>
+                                <div class="w-10 text-xs text-right text-slate-400">42%</div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 text-xs text-slate-300">上海</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-fill" style="width: 24%; background-color: #38bdf8"></div>
+                                </div>
+                                <div class="w-10 text-xs text-right text-slate-400">24%</div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 text-xs text-slate-300">浙江</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-fill" style="width: 12%; background-color: #10b981"></div>
+                                </div>
+                                <div class="w-10 text-xs text-right text-slate-400">12%</div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 text-xs text-slate-300">广东</div>
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-fill" style="width: 11%; background-color: #f59e0b"></div>
+                                </div>
+                                <div class="w-10 text-xs text-right text-slate-400">11%</div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                        </svg>
+                        中国AI市场规模趋势 (2021-2026)
+                    </h3>
+                    <span class="tag tag-blue">亿元</span>
+                </div>
+                <div id="chart-market-trend" class="chart-container"></div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                        </svg>
+                        全球AI市场区域份额分布
+                    </h3>
+                    <span class="tag tag-purple">2026预测</span>
+                </div>
+                <div id="chart-region-share" class="chart-container"></div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        AI细分赛道市场规模对比 (2024-2026)
+                    </h3>
+                    <span class="tag tag-green">亿元</span>
+                </div>
+                <div id="chart-segments" class="chart-container"></div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        中美AI投资对比
+                    </h3>
+                    <span class="tag tag-orange">亿美元</span>
+                </div>
+                <div id="chart-investment" class="chart-container"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+                        </svg>
+                        行业热度雷达
+                    </h3>
+                </div>
+                <div id="chart-radar" class="chart-container"></div>
+            </div>
+            <div class="lg:col-span-2 glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        2026年AI产业关键事件时间线
+                    </h3>
+                </div>
+                <div class="relative">
+                    <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-sky-500 via-purple-500 to-emerald-500"></div>
+                    <div class="space-y-4 pl-10">
+                        
+                        <div class="relative">
+                            <div class="absolute -left-[26px] top-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-slate-900"></div>
+                            <div class="glass rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-blue-400">2026 Q1</span>
+                                    <span class="tag tag-blue">已发生</span>
+                                </div>
+                                <p class="text-sm text-slate-300 mt-1">SpaceX合并xAI，与Anthropic、谷歌达成大规模算力租赁协议</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-[26px] top-1 w-3 h-3 rounded-full bg-purple-500 border-2 border-slate-900"></div>
+                            <div class="glass rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-purple-400">2026 Q2</span>
+                                    <span class="tag tag-purple">进行中</span>
+                                </div>
+                                <p class="text-sm text-slate-300 mt-1">Cursor ARR达40亿美元；中国AI大模型数量突破1500个</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-[26px] top-1 w-3 h-3 rounded-full bg-green-500 border-2 border-slate-900"></div>
+                            <div class="glass rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-green-400">2026 H2</span>
+                                    <span class="tag tag-green">预测</span>
+                                </div>
+                                <p class="text-sm text-slate-300 mt-1">SpaceX、Anthropic、OpenAI预计IPO；人形机器人出货量突破5万台</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-[26px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-slate-900"></div>
+                            <div class="glass rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-orange-400">2026-2030</span>
+                                    <span class="tag tag-orange">展望</span>
+                                </div>
+                                <p class="text-sm text-slate-300 mt-1">欧盟AI大陆行动计划投入2250亿美元；80%企业通过AI原生平台转型</p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="glass rounded-xl p-4 text-center">
+            <p class="text-xs text-slate-500">
+                数据来源：综合研报数据 (模拟+真实框架) |
+                构建时间：2026-06-18 13:43:49 |
+                版本：1.0 |
+                <span class="text-sky-400">AI Industry Intelligence Dashboard 1.0</span>
+            </p>
+        </footer>
+    </main>
+
+    <script>
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', {hour12: false});
+            document.getElementById('date').textContent = now.toLocaleDateString('zh-CN', {year: 'numeric', month: '2-digit', day: '2-digit'});
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Report Filter
+        function filterReports(category) {
+            const cards = document.querySelectorAll('.report-card');
+            cards.forEach(card => {
+                card.style.display = (category === 'all' || card.dataset.category === category) ? 'block' : 'none';
+            });
+        }
+
+        // Data injection from backend
+        const marketTrendData = {"years": ["2021", "2022", "2023", "2024", "2025E", "2026E"], "market_size": [3100, 4200, 5300, 7470, 9800, 12534], "growth_rate": [35, 35, 26, 41, 31, 28]};
+        const regionShareData = [{"name": "\u5317\u7f8e", "value": 1151, "color": "#38bdf8"}, {"name": "\u4e9a\u592a", "value": 1121, "color": "#818cf8"}, {"name": "\u6b27\u6d32", "value": 819, "color": "#c084fc"}, {"name": "\u4e2d\u4e1c\u975e\u6d32", "value": 467, "color": "#fb923c"}, {"name": "\u62c9\u7f8e", "value": 200, "color": "#4ade80"}];
+        const segmentsData = {"categories": ["AI\u670d\u52a1\u5668", "AI\u82af\u7247", "\u5927\u6a21\u578b\u670d\u52a1", "AI\u773c\u955c", "\u667a\u80fd\u673a\u5668\u4eba", "\u81ea\u52a8\u9a7e\u9a76"], "years": ["2024", "2025E", "2026E"], "data": {"2024": [850, 420, 180, 65, 120, 380], "2025E": [1150, 580, 320, 95, 210, 480], "2026E": [1580, 820, 550, 145, 380, 620]}};
+        const investmentData = {"countries": ["\u7f8e\u56fd", "\u4e2d\u56fd", "\u82f1\u56fd", "\u5fb7\u56fd", "\u6cd5\u56fd", "\u65e5\u672c"], "values": [2859, 124, 193, 149, 121, 209], "colors": ["#f87171", "#38bdf8", "#818cf8", "#c084fc", "#fb923c", "#4ade80"]};
+        const radarData = {"indicators": [{"name": "\u6280\u672f\u521b\u65b0", "max": 100}, {"name": "\u5546\u4e1a\u5316", "max": 100}, {"name": "\u8d44\u672c\u70ed\u5ea6", "max": 100}, {"name": "\u653f\u7b56\u652f\u6301", "max": 100}, {"name": "\u4eba\u624d\u50a8\u5907", "max": 100}, {"name": "\u751f\u6001\u5b8c\u5584", "max": 100}], "series": [{"name": "\u751f\u6210\u5f0fAI", "value": [92, 78, 95, 88, 75, 82], "color": "#38bdf8"}, {"name": "AI\u786c\u4ef6", "value": [85, 65, 70, 82, 68, 60], "color": "#c084fc"}, {"name": "AI\u5e94\u7528", "value": [78, 88, 82, 75, 80, 85], "color": "#4ade80"}]};
+
+        // Chart Theme
+        const chartTheme = {
+            backgroundColor: 'transparent',
+            textStyle: { color: '#94a3b8' },
+            title: { textStyle: { color: '#e2e8f0' } },
+            legend: { textStyle: { color: '#94a3b8' } },
+            tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                borderColor: '#334155',
+                textStyle: { color: '#e2e8f0' }
+            }
+        };
+
+        // Chart 1: Market Trend
+        const chart1 = echarts.init(document.getElementById('chart-market-trend'));
+        chart1.setOption({
+            ...chartTheme,
+            tooltip: { ...chartTheme.tooltip, trigger: 'axis', axisPointer: { type: 'cross' } },
+            legend: { data: ['市场规模', '增长率'], top: 0, textStyle: { color: '#94a3b8' } },
+            grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: marketTrendData.years,
+                axisLine: { lineStyle: { color: '#334155' } },
+                axisLabel: { color: '#94a3b8' }
+            },
+            yAxis: [
+                {
+                    type: 'value', name: '亿元',
+                    axisLine: { lineStyle: { color: '#334155' } },
+                    splitLine: { lineStyle: { color: '#1e293b' } },
+                    axisLabel: { color: '#94a3b8' }
+                },
+                {
+                    type: 'value', name: '增速',
+                    axisLine: { lineStyle: { color: '#334155' } },
+                    splitLine: { show: false },
+                    axisLabel: { color: '#94a3b8', formatter: '{value}%' }
+                }
+            ],
+            series: [
+                {
+                    name: '市场规模', type: 'bar',
+                    data: marketTrendData.market_size,
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#38bdf8' },
+                            { offset: 1, color: '#0ea5e9' }
+                        ]),
+                        borderRadius: [4, 4, 0, 0]
+                    }
+                },
+                {
+                    name: '增长率', type: 'line', yAxisIndex: 1,
+                    data: marketTrendData.growth_rate,
+                    smooth: true,
+                    itemStyle: { color: '#c084fc' },
+                    lineStyle: { width: 3 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(192, 132, 252, 0.3)' },
+                            { offset: 1, color: 'rgba(192, 132, 252, 0)' }
+                        ])
+                    }
+                }
+            ]
+        });
+
+        // Chart 2: Region Share
+        const chart2 = echarts.init(document.getElementById('chart-region-share'));
+        chart2.setOption({
+            ...chartTheme,
+            tooltip: { ...chartTheme.tooltip, trigger: 'item' },
+            legend: { orient: 'vertical', left: 'left', top: 'center', textStyle: { color: '#94a3b8' } },
+            series: [{
+                name: '市场份额', type: 'pie',
+                radius: ['40%', '70%'], center: ['60%', '50%'],
+                avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 6, borderColor: '#0f172a', borderWidth: 2 },
+                label: { show: false },
+                emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold', color: '#e2e8f0' } },
+                data: regionShareData.map(d => ({ ...d, itemStyle: { color: d.color } }))
+            }]
+        });
+
+        // Chart 3: Segments
+        const chart3 = echarts.init(document.getElementById('chart-segments'));
+        chart3.setOption({
+            ...chartTheme,
+            tooltip: { ...chartTheme.tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
+            legend: { data: segmentsData.years, top: 0, textStyle: { color: '#94a3b8' } },
+            grid: { left: '3%', right: '4%', bottom: '3%', top: '12%', containLabel: true },
+            xAxis: {
+                type: 'category', data: segmentsData.categories,
+                axisLine: { lineStyle: { color: '#334155' } },
+                axisLabel: { color: '#94a3b8', rotate: 15 }
+            },
+            yAxis: {
+                type: 'value', name: '亿元',
+                axisLine: { lineStyle: { color: '#334155' } },
+                splitLine: { lineStyle: { color: '#1e293b' } },
+                axisLabel: { color: '#94a3b8' }
+            },
+            series: [
+                {
+                    name: segmentsData.years[0], type: 'bar',
+                    data: segmentsData.data[segmentsData.years[0]],
+                    itemStyle: { color: 'rgba(56, 189, 248, 0.4)', borderRadius: [3, 3, 0, 0] }
+                },
+                {
+                    name: segmentsData.years[1], type: 'bar',
+                    data: segmentsData.data[segmentsData.years[1]],
+                    itemStyle: { color: 'rgba(129, 140, 248, 0.6)', borderRadius: [3, 3, 0, 0] }
+                },
+                {
+                    name: segmentsData.years[2], type: 'bar',
+                    data: segmentsData.data[segmentsData.years[2]],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#38bdf8' },
+                            { offset: 1, color: '#818cf8' }
+                        ]),
+                        borderRadius: [4, 4, 0, 0]
+                    }
+                }
+            ]
+        });
+
+        // Chart 4: Investment
+        const chart4 = echarts.init(document.getElementById('chart-investment'));
+        chart4.setOption({
+            ...chartTheme,
+            tooltip: { ...chartTheme.tooltip, trigger: 'axis' },
+            grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+            xAxis: {
+                type: 'category', data: investmentData.countries,
+                axisLine: { lineStyle: { color: '#334155' } },
+                axisLabel: { color: '#94a3b8' }
+            },
+            yAxis: {
+                type: 'value', name: '亿美元',
+                axisLine: { lineStyle: { color: '#334155' } },
+                splitLine: { lineStyle: { color: '#1e293b' } },
+                axisLabel: { color: '#94a3b8' }
+            },
+            series: [{
+                name: '私人AI投资', type: 'bar',
+                data: investmentData.values.map((v, i) => ({
+                    value: v, itemStyle: { color: investmentData.colors[i], borderRadius: [4, 4, 0, 0] }
+                })),
+                label: { show: true, position: 'top', color: '#e2e8f0', fontSize: 11 }
+            }]
+        });
+
+        // Chart 5: Radar
+        const chart5 = echarts.init(document.getElementById('chart-radar'));
+        chart5.setOption({
+            ...chartTheme,
+            tooltip: { ...chartTheme.tooltip },
+            radar: {
+                indicator: radarData.indicators,
+                axisName: { color: '#94a3b8' },
+                splitArea: {
+                    areaStyle: {
+                        color: ['rgba(15, 23, 42, 0.5)', 'rgba(15, 23, 42, 0.3)', 'rgba(15, 23, 42, 0.5)', 'rgba(15, 23, 42, 0.3)']
+                    }
+                },
+                splitLine: { lineStyle: { color: '#334155' } },
+                axisLine: { lineStyle: { color: '#334155' } }
+            },
+            series: [{
+                name: '行业热度', type: 'radar',
+                data: radarData.series.map(s => ({
+                    value: s.value, name: s.name,
+                    areaStyle: { color: s.color + '4D' },
+                    lineStyle: { color: s.color, width: 2 },
+                    itemStyle: { color: s.color }
+                }))
+            }]
+        });
+
+        // Resize
+        window.addEventListener('resize', () => {
+            chart1.resize(); chart2.resize(); chart3.resize(); chart4.resize(); chart5.resize();
+        });
+    </script>
+</body>
+</html>
